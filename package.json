@@ -1,0 +1,25 @@
+{
+  "name": "cnbc-scrape",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build": "rimraf ./build && tsc",
+    "start": "npm run build && node build/index.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^0.19.2",
+    "fs": "0.0.1-security",
+    "html-to-text": "^5.1.1",
+    "node-html-parser": "^1.2.13",
+    "tsc": "^1.20150623.0",
+    "typescript": "^3.8.3"
+  },
+  "devDependencies": {
+    "@types/html-to-text": "^1.4.31",
+    "@types/node": "^13.9.5",
+    "rimraf": "^3.0.2"
+  }
+}
