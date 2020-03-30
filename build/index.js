@@ -44,6 +44,11 @@ var node_html_parser_1 = require("node-html-parser");
 var html_to_text_1 = __importDefault(require("html-to-text"));
 var puppeteer_1 = __importDefault(require("puppeteer"));
 var querystring_1 = __importDefault(require("querystring"));
+var pg_1 = require("pg");
+var dotenv_1 = require("dotenv");
+var path_1 = require("path");
+dotenv_1.config({ path: path_1.resolve(__dirname, "../.env") });
+console.log(process.env);
 var CNBC_URL = "https://www.cnbc.com/world-markets/";
 var CNBC_API_URL = "https://webql-redesign.cnbcfm.com/graphql";
 var grabShaCallback = function (res, rej) { return __awaiter(void 0, void 0, void 0, function () {
@@ -144,7 +149,7 @@ var getArticleText = function (url) { return __awaiter(void 0, void 0, void 0, f
         }
     });
 }); };
-(function () { return __awaiter(void 0, void 0, void 0, function () {
+var main = function () { return __awaiter(void 0, void 0, void 0, function () {
     var sha, articles, texts;
     return __generator(this, function (_a) {
         switch (_a.label) {
@@ -164,4 +169,27 @@ var getArticleText = function (url) { return __awaiter(void 0, void 0, void 0, f
                 return [2 /*return*/];
         }
     });
-}); })();
+}); };
+var postgres = function () { return __awaiter(void 0, void 0, void 0, function () {
+    var client, res;
+    return __generator(this, function (_a) {
+        switch (_a.label) {
+            case 0:
+                client = new pg_1.Client();
+                return [4 /*yield*/, client.connect()];
+            case 1:
+                _a.sent();
+                return [4 /*yield*/, client.query("SELECT $1::text as message", [
+                        "Hello world!"
+                    ])];
+            case 2:
+                res = _a.sent();
+                console.log(res.rows[0].message); // Hello world!
+                return [4 /*yield*/, client.end()];
+            case 3:
+                _a.sent();
+                return [2 /*return*/];
+        }
+    });
+}); };
+postgres().catch(console.log);

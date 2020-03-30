@@ -4,6 +4,11 @@ import htmlToText from "html-to-text";
 import { Article, UnparsedApiParams, ParsedExtensions } from "./types";
 import puppeteer from "puppeteer";
 import querystring from "querystring";
+import { Client } from "pg";
+import { config } from "dotenv";
+import { resolve } from "path";
+
+config({ path: resolve(__dirname, "../.env") });
 
 const CNBC_URL = "https://www.cnbc.com/world-markets/";
 const CNBC_API_URL = "https://webql-redesign.cnbcfm.com/graphql";
@@ -86,7 +91,7 @@ const getArticleText = async url => {
   return text;
 };
 
-(async () => {
+const main = async () => {
   const sha = await grabSha();
   const articles = await fetchArticles(sha);
 
@@ -98,4 +103,17 @@ const getArticleText = async url => {
     articles.map(a => getArticleText(a.url))
   ).catch(console.log);
   console.log(texts);
-})();
+};
+
+const postgres = async () => {
+  const client = new Client();
+  await client.connect();
+
+  const res = await client.query("SELECT $1::text as message", [
+    "Hello world!"
+  ]);
+  console.log(res.rows[0].message); // Hello world!
+  await client.end();
+};
+
+postgres().catch(console.log);
