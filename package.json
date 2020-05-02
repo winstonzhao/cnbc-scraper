@@ -14,8 +14,8 @@
     "dotenv": "^8.2.0",
     "fs": "0.0.1-security",
     "html-to-text": "^5.1.1",
+    "mongoose": "^5.9.11",
     "node-html-parser": "^1.2.13",
-    "pg": "^7.18.2",
     "puppeteer": "^2.1.1",
     "tsc": "^1.20150623.0",
     "typescript": "^3.8.3"
@@ -23,7 +23,6 @@
   "devDependencies": {
     "@types/html-to-text": "^1.4.31",
     "@types/node": "^13.9.5",
-    "@types/pg": "^7.14.3",
     "@types/puppeteer": "^2.0.1",
     "rimraf": "^3.0.2"
   }

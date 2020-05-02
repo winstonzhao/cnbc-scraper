@@ -44,18 +44,17 @@ var node_html_parser_1 = require("node-html-parser");
 var html_to_text_1 = __importDefault(require("html-to-text"));
 var puppeteer_1 = __importDefault(require("puppeteer"));
 var querystring_1 = __importDefault(require("querystring"));
-var pg_1 = require("pg");
 var dotenv_1 = require("dotenv");
 var path_1 = require("path");
+var mongoose_1 = __importDefault(require("mongoose"));
 dotenv_1.config({ path: path_1.resolve(__dirname, "../.env") });
-console.log(process.env);
 var CNBC_URL = "https://www.cnbc.com/world-markets/";
 var CNBC_API_URL = "https://webql-redesign.cnbcfm.com/graphql";
 var grabShaCallback = function (res, rej) { return __awaiter(void 0, void 0, void 0, function () {
     var browser, page, button;
     return __generator(this, function (_a) {
         switch (_a.label) {
-            case 0: return [4 /*yield*/, puppeteer_1.default.launch({})];
+            case 0: return [4 /*yield*/, puppeteer_1.default.launch()];
             case 1:
                 browser = _a.sent();
                 return [4 /*yield*/, browser.pages()];
@@ -150,46 +149,54 @@ var getArticleText = function (url) { return __awaiter(void 0, void 0, void 0, f
     });
 }); };
 var main = function () { return __awaiter(void 0, void 0, void 0, function () {
-    var sha, articles, texts;
+    var sha, articles, texts, i, text;
     return __generator(this, function (_a) {
         switch (_a.label) {
             case 0: return [4 /*yield*/, grabSha()];
             case 1:
                 sha = _a.sent();
+                console.log("Fetching articles...");
                 return [4 /*yield*/, fetchArticles(sha)];
             case 2:
                 articles = _a.sent();
                 if (!articles) {
+                    console.log("No articles found...");
                     return [2 /*return*/];
                 }
-                return [4 /*yield*/, Promise.all(articles.map(function (a) { return getArticleText(a.url); })).catch(console.log)];
+                console.log("Fetched " + articles.length + " articles...");
+                texts = [];
+                i = 0;
+                _a.label = 3;
             case 3:
-                texts = _a.sent();
+                if (!(i < articles.length)) return [3 /*break*/, 6];
+                console.log("Fetching text for article " + (i + 1) + "/" + articles.length);
+                return [4 /*yield*/, getArticleText(articles[i].url)];
+            case 4:
+                text = _a.sent();
+                texts.push(text);
+                console.log("Fetched text for article " + (i + 1) + "/" + articles.length);
+                _a.label = 5;
+            case 5:
+                i++;
+                return [3 /*break*/, 3];
+            case 6:
                 console.log(texts);
                 return [2 /*return*/];
         }
     });
 }); };
-var postgres = function () { return __awaiter(void 0, void 0, void 0, function () {
-    var client, res;
+var db = function () { return __awaiter(void 0, void 0, void 0, function () {
     return __generator(this, function (_a) {
         switch (_a.label) {
-            case 0:
-                client = new pg_1.Client();
-                return [4 /*yield*/, client.connect()];
+            case 0: return [4 /*yield*/, mongoose_1.default.connect('mongodb://localhost', {
+                    useNewUrlParser: true,
+                    useUnifiedTopology: true
+                })];
             case 1:
                 _a.sent();
-                return [4 /*yield*/, client.query("SELECT $1::text as message", [
-                        "Hello world!"
-                    ])];
-            case 2:
-                res = _a.sent();
-                console.log(res.rows[0].message); // Hello world!
-                return [4 /*yield*/, client.end()];
-            case 3:
-                _a.sent();
+                console.log("meme");
                 return [2 /*return*/];
         }
     });
 }); };
-postgres().catch(console.log);
+db();
