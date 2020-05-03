@@ -46,7 +46,7 @@ var puppeteer_1 = __importDefault(require("puppeteer"));
 var querystring_1 = __importDefault(require("querystring"));
 var dotenv_1 = require("dotenv");
 var path_1 = require("path");
-var mongoose_1 = __importDefault(require("mongoose"));
+var db_1 = require("./db");
 dotenv_1.config({ path: path_1.resolve(__dirname, "../.env") });
 var CNBC_URL = "https://www.cnbc.com/world-markets/";
 var CNBC_API_URL = "https://webql-redesign.cnbcfm.com/graphql";
@@ -185,18 +185,18 @@ var main = function () { return __awaiter(void 0, void 0, void 0, function () {
         }
     });
 }); };
-var db = function () { return __awaiter(void 0, void 0, void 0, function () {
+var test = function () { return __awaiter(void 0, void 0, void 0, function () {
+    var controller;
     return __generator(this, function (_a) {
         switch (_a.label) {
-            case 0: return [4 /*yield*/, mongoose_1.default.connect('mongodb://localhost', {
-                    useNewUrlParser: true,
-                    useUnifiedTopology: true
-                })];
+            case 0: return [4 /*yield*/, db_1.GetDbController()];
             case 1:
+                controller = _a.sent();
+                return [4 /*yield*/, controller.createText({ id: "5", date: new Date(), text: 'hello', title: 'hello' })];
+            case 2:
                 _a.sent();
-                console.log("meme");
                 return [2 /*return*/];
         }
     });
 }); };
-db();
+test();

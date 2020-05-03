@@ -1,3 +1,5 @@
+import { Document } from "mongoose";
+
 export interface Article {
   id: number;
   branch: string;
@@ -21,3 +23,18 @@ export interface ParsedExtensions {
     sha256Hash: string;
   };
 }
+
+export interface Text {
+  id: string,
+  title: string,
+  text: string,
+  date: Date,
+}
+
+export interface TextDocument extends Document {
+  id: string,
+  title: string,
+  text: string,
+  date: Date,
+}
+
