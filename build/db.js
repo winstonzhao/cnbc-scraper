@@ -1,4 +1,15 @@
 "use strict";
+var __assign = (this && this.__assign) || function () {
+    __assign = Object.assign || function(t) {
+        for (var s, i = 1, n = arguments.length; i < n; i++) {
+            s = arguments[i];
+            for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p))
+                t[p] = s[p];
+        }
+        return t;
+    };
+    return __assign.apply(this, arguments);
+};
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -47,9 +58,9 @@ var mongoose_1 = __importStar(require("mongoose"));
 exports.TextSchema = new mongoose_1.Schema({
     id: { type: String, required: true },
     text: { type: String, required: true },
-    date: { type: Date, required: true }
+    date: { type: Date, required: true },
 });
-exports.TextModel = mongoose_1.default.model('texts', exports.TextSchema);
+exports.TextModel = mongoose_1.default.model("texts", exports.TextSchema);
 var DbController = /** @class */ (function () {
     function DbController() {
         this.initiated = false;
@@ -58,9 +69,9 @@ var DbController = /** @class */ (function () {
         return __awaiter(this, void 0, void 0, function () {
             return __generator(this, function (_a) {
                 switch (_a.label) {
-                    case 0: return [4 /*yield*/, mongoose_1.default.connect('mongodb://localhost', {
+                    case 0: return [4 /*yield*/, mongoose_1.default.connect("mongodb://localhost", {
                             useNewUrlParser: true,
-                            useUnifiedTopology: true
+                            useUnifiedTopology: true,
                         })];
                     case 1:
                         _a.sent();
@@ -70,15 +81,35 @@ var DbController = /** @class */ (function () {
             });
         });
     };
-    DbController.prototype.createText = function (text) {
+    DbController.prototype.findText = function (id) {
         return __awaiter(this, void 0, void 0, function () {
             return __generator(this, function (_a) {
-                exports.TextModel.findOne({ id: text.id }, function (err, t) {
-                    if (err)
-                        throw err;
-                    console.log(t);
-                });
-                return [2 /*return*/];
+                return [2 /*return*/, new Promise(function (res, rej) {
+                        return exports.TextModel.findOne({ id: id }, function (err, t) {
+                            if (err)
+                                rej(err);
+                            res(t);
+                        });
+                    })];
+            });
+        });
+    };
+    DbController.prototype.createText = function (text) {
+        return __awaiter(this, void 0, void 0, function () {
+            var exists;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0: return [4 /*yield*/, this.findText(text.id)];
+                    case 1:
+                        exists = _a.sent();
+                        if (exists) {
+                            return [2 /*return*/];
+                        }
+                        return [4 /*yield*/, exports.TextModel.create(__assign({}, text))];
+                    case 2:
+                        _a.sent();
+                        return [2 /*return*/];
+                }
             });
         });
     };

@@ -44,10 +44,7 @@ var node_html_parser_1 = require("node-html-parser");
 var html_to_text_1 = __importDefault(require("html-to-text"));
 var puppeteer_1 = __importDefault(require("puppeteer"));
 var querystring_1 = __importDefault(require("querystring"));
-var dotenv_1 = require("dotenv");
-var path_1 = require("path");
 var db_1 = require("./db");
-dotenv_1.config({ path: path_1.resolve(__dirname, "../.env") });
 var CNBC_URL = "https://www.cnbc.com/world-markets/";
 var CNBC_API_URL = "https://webql-redesign.cnbcfm.com/graphql";
 var grabShaCallback = function (res, rej) { return __awaiter(void 0, void 0, void 0, function () {
@@ -97,7 +94,7 @@ var grabSha = function () {
         grabShaCallback(res, rej);
     });
 };
-var fetchArticles = function (sha) { return __awaiter(void 0, void 0, void 0, function () {
+var fetchArticles = function (sha, offset) { return __awaiter(void 0, void 0, void 0, function () {
     var params, response, articles;
     return __generator(this, function (_a) {
         switch (_a.label) {
@@ -106,17 +103,17 @@ var fetchArticles = function (sha) { return __awaiter(void 0, void 0, void 0, fu
                     operationName: "getAssetList",
                     variables: JSON.stringify({
                         id: 100003241,
-                        offset: 35,
-                        pageSize: 24,
+                        offset: offset,
+                        pageSize: 30,
                         nonFilter: true,
-                        includeNative: false
+                        includeNative: false,
                     }),
                     extensions: JSON.stringify({
                         persistedQuery: {
                             version: 1,
-                            sha256Hash: sha
-                        }
-                    })
+                            sha256Hash: sha,
+                        },
+                    }),
                 };
                 return [4 /*yield*/, axios_1.default
                         .get(CNBC_API_URL, { params: params })
@@ -142,28 +139,31 @@ var getArticleText = function (url) { return __awaiter(void 0, void 0, void 0, f
                 article = root.querySelector(".ArticleBody-articleBody");
                 text = html_to_text_1.default.fromString(article.innerHTML, {
                     ignoreHref: true,
-                    ignoreImage: true
+                    ignoreImage: true,
                 });
                 return [2 /*return*/, text];
         }
     });
 }); };
 var main = function () { return __awaiter(void 0, void 0, void 0, function () {
-    var sha, articles, texts, i, text;
+    var sha, articles, texts, i, text, dbController, _i, texts_1, text;
     return __generator(this, function (_a) {
         switch (_a.label) {
-            case 0: return [4 /*yield*/, grabSha()];
+            case 0:
+                console.log("Grabbing SHA...");
+                return [4 /*yield*/, grabSha()];
             case 1:
                 sha = _a.sent();
+                console.log("Grabbed SHA");
                 console.log("Fetching articles...");
-                return [4 /*yield*/, fetchArticles(sha)];
+                return [4 /*yield*/, fetchArticles(sha, 0)];
             case 2:
                 articles = _a.sent();
                 if (!articles) {
-                    console.log("No articles found...");
+                    console.log("No articles found");
                     return [2 /*return*/];
                 }
-                console.log("Fetched " + articles.length + " articles...");
+                console.log("Fetched " + articles.length + " articles");
                 texts = [];
                 i = 0;
                 _a.label = 3;
@@ -173,30 +173,38 @@ var main = function () { return __awaiter(void 0, void 0, void 0, function () {
                 return [4 /*yield*/, getArticleText(articles[i].url)];
             case 4:
                 text = _a.sent();
-                texts.push(text);
+                texts.push({
+                    date: new Date(articles[i].datePublished),
+                    id: String(articles[i].id),
+                    text: text,
+                    title: articles[i].title,
+                });
                 console.log("Fetched text for article " + (i + 1) + "/" + articles.length);
                 _a.label = 5;
             case 5:
                 i++;
                 return [3 /*break*/, 3];
             case 6:
-                console.log(texts);
-                return [2 /*return*/];
-        }
-    });
-}); };
-var test = function () { return __awaiter(void 0, void 0, void 0, function () {
-    var controller;
-    return __generator(this, function (_a) {
-        switch (_a.label) {
-            case 0: return [4 /*yield*/, db_1.GetDbController()];
-            case 1:
-                controller = _a.sent();
-                return [4 /*yield*/, controller.createText({ id: "5", date: new Date(), text: 'hello', title: 'hello' })];
-            case 2:
+                console.log("Adding texts to db...");
+                return [4 /*yield*/, db_1.GetDbController()];
+            case 7:
+                dbController = _a.sent();
+                _i = 0, texts_1 = texts;
+                _a.label = 8;
+            case 8:
+                if (!(_i < texts_1.length)) return [3 /*break*/, 11];
+                text = texts_1[_i];
+                return [4 /*yield*/, dbController.createText(text)];
+            case 9:
                 _a.sent();
+                _a.label = 10;
+            case 10:
+                _i++;
+                return [3 /*break*/, 8];
+            case 11:
+                console.log("Added texts to db");
                 return [2 /*return*/];
         }
     });
 }); };
-test();
+main();

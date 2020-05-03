@@ -1,14 +1,10 @@
 import axios from "axios";
 import { parse } from "node-html-parser";
 import htmlToText from "html-to-text";
-import { Article, UnparsedApiParams, ParsedExtensions } from "./types";
+import { Article, UnparsedApiParams, ParsedExtensions, Text } from "./types";
 import puppeteer from "puppeteer";
 import querystring from "querystring";
-import { config } from "dotenv";
-import { resolve } from "path";
 import { GetDbController } from "./db";
-
-config({ path: resolve(__dirname, "../.env") });
 
 const CNBC_URL = "https://www.cnbc.com/world-markets/";
 const CNBC_API_URL = "https://webql-redesign.cnbcfm.com/graphql";
@@ -46,13 +42,13 @@ const grabSha = () =>
     grabShaCallback(res, rej);
   });
 
-const fetchArticles = async (sha: string) => {
+const fetchArticles = async (sha: string, offset: number) => {
   const params = {
     operationName: "getAssetList",
     variables: JSON.stringify({
       id: 100003241,
-      offset: 35,
-      pageSize: 24,
+      offset,
+      pageSize: 30, // This is the max size that works
       nonFilter: true,
       includeNative: false,
     }),
@@ -92,26 +88,43 @@ const getArticleText = async (url) => {
 };
 
 const main = async () => {
+  console.log("Grabbing SHA...");
   const sha = await grabSha();
+  console.log("Grabbed SHA");
   console.log("Fetching articles...");
-  const articles = await fetchArticles(sha);
+
+  let articles = await fetchArticles(sha, 0);
 
   if (!articles) {
-    console.log("No articles found...");
+    console.log("No articles found");
     return;
   }
 
-  console.log(`Fetched ${articles.length} articles...`);
+  console.log(`Fetched ${articles.length} articles`);
 
-  const texts: string[] = [];
+  const texts: Text[] = [];
 
   for (let i = 0; i < articles.length; i++) {
     console.log(`Fetching text for article ${i + 1}/${articles.length}`);
     const text = await getArticleText(articles[i].url);
-    texts.push(text);
+    texts.push({
+      date: new Date(articles[i].datePublished),
+      id: String(articles[i].id),
+      text,
+      title: articles[i].title,
+    });
     console.log(`Fetched text for article ${i + 1}/${articles.length}`);
   }
-  console.log(texts);
+
+  console.log("Adding texts to db...");
+
+  const dbController = await GetDbController();
+
+  for (const text of texts) {
+    await dbController.createText(text);
+  }
+
+  console.log("Added texts to db");
 };
 
 main();
