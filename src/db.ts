@@ -33,9 +33,11 @@ export class DbController {
     const exists = await this.findText(text.id);
 
     if (exists) {
+      console.log(`Existing text found for id: ${text.id}, not being added.`);
       return;
     }
 
+    console.log(`Adding text with id: ${text.id}`);
     await TextModel.create({
       ...text,
     });
