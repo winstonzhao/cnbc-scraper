@@ -5,13 +5,13 @@ import { Article, UnparsedApiParams, ParsedExtensions, Text } from "./types";
 import puppeteer from "puppeteer";
 import querystring from "querystring";
 import { GetDbController } from "./db";
+import { asyncFilter } from "./util";
 
 const CNBC_URL = "https://www.cnbc.com/world-markets/";
 const CNBC_API_URL = "https://webql-redesign.cnbcfm.com/graphql";
 
 const grabShaCallback = async (res, rej) => {
-  const browser = await puppeteer.launch();
-
+  const browser = await puppeteer.launch({ headless: false });
   const page = (await browser.pages())[0];
 
   await page.setRequestInterception(true);
@@ -102,7 +102,17 @@ export const GetCNBCTexts = async () => {
 
   console.log(`Fetched ${articles.length} articles`);
 
-  const texts: Text[] = [];
+  const dbController = await GetDbController();
+
+  const numFetchedTexts = articles.length;
+  console.log("Filtering existing texts");
+  articles = await asyncFilter<Article>(articles, async (el) => {
+    const res = await dbController.findText(String(el.id));
+    return res === null;
+  });
+  console.log(`Filtered ${numFetchedTexts - articles.length} texts.`);
+
+  let texts: Text[] = [];
 
   for (let i = 0; i < articles.length; i++) {
     console.log(`Fetching text for article ${i + 1}/${articles.length}`);
